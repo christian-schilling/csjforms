@@ -54,24 +54,44 @@ tojson = function(def,obj) {
     };
 };
 
+prepend_fieldset = function(obj,fieldname,opts) {
+
+    obj.before(template(templates.fieldset,{name:fieldname,label:to_verbose(fieldname,opts)}))
+       .prev()
+       .csjfieldset(opts.inline)
+       .children("input[value]=-").click(function(){$(this).parent().remove();});
+};
+
+fromjson = function(def,obj,jsonobj) {
+    if(obj.is("fieldset")) {
+        obj.children().each(function(){
+            var id = $(this).attr('name') || $(this).attr('title');
+            if(id && def[id]) {
+                if(!def[id].inline) { $(this).val(jsonobj[id]);}
+                else if (jsonobj[id] != []){
+                    for(var i in jsonobj[id]){
+                        prepend_fieldset($(this).children('input[value=+]').eq(0),id,def[id]);
+                        fromjson(def[id].inline,$(this).children('fieldset:last'),jsonobj[id][i]);
+                    }
+                }
+            }
+        });
+    }
+};
+
 $.fn.csjfieldset = function(def) {
 
     make_field = function(fieldname,opts) {
         return template(opts.widget.template,{name:fieldname,label:to_verbose(fieldname,opts)});
     };
 
-    obj = this;
+    var obj = this;
     $.each(def,function(fieldname,opts){
         if(opts.inline){
             obj.append(template(templates.inline,{name:fieldname,label:to_plural(fieldname,opts)}))
                .children("div[title="+fieldname+']')
                .children("input[value=+]")
-               .click(function(){
-                    $(this).before(template(templates.fieldset,{name:fieldname,label:to_verbose(fieldname,opts)}))
-                           .prev()
-                           .csjfieldset(opts.inline)
-                           .children("input[value]=-").click(function(){$(this).parent().remove();});
-                });
+               .click(function(){ prepend_fieldset($(this),fieldname,opts); });
         } else {
             obj.append(make_field(fieldname,opts));
         }
@@ -79,7 +99,7 @@ $.fn.csjfieldset = function(def) {
     return this;
 };
 
-$.fn.csjform = function(def){
+$.fn.csjform = function(def,data){
     this.submit(function(){return false;})
         .prepend(template(templates.fieldset,{name:def.name,label:to_verbose(def.name,def)}))
         .children("fieldset")
@@ -91,6 +111,7 @@ $.fn.csjform = function(def){
         alert(tojson(def.fields,obj).toSource());
     });
 
+    if(data) fromjson(def.fields,obj,data);
 };
 
 })(jQuery);
