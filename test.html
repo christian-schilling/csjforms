@@ -13,17 +13,22 @@
 
 $(document).ready(function(){
 
-$("#myform").csjform({
-    name:"blub",
-    form:{
-        somefield:{widget:$.csjforms.widgets.text},
-        bigger:{widget:$.csjforms.widgets.textarea},
-        subtest:{inline:{
-            blabla:{widget:$.csjforms.widgets.text},
-            foo:{inline:{
-                aaa:{widget:$.csjforms.widgets.text},
+widgets = $.csjforms.widgets;
+
+$("#eventgroup").csjform({
+    name:"eventgroup",
+    verbose:'Event group',
+    fields:{
+        name:{widget:widgets.text,verbose:'Name'},
+        description:{widget:widgets.textarea},
+        event_set:{verbose:'Event',plural:'Events',inline:{
+            name:{widget:widgets.text},
+            jear:{widget:widgets.text},
+            event_date_set:{verbose:'Event date',inline:{
+                date:{widget:widgets.text},
             }},
         }},
+        blub_set:{inline:{foo:{widget:widgets.text}}},
     },
 });
 
@@ -31,9 +36,9 @@ $("#myform").csjform({
 </script>
 </head>
 <body>
-    <form method="post" action="#" id="myform">
+    <form method="post" action="#" id="eventgroup">
         <div>
-            <input type="submit" value="submit" name="submit">
+            <input id="save" type="submit" value="submit" name="submit">
         </div>
     </form>
 
