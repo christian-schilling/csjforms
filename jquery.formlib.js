@@ -99,7 +99,7 @@ $.fn.csjfieldset = function(def) {
     return this;
 };
 
-$.fn.csjform = function(def,data){
+$.fn.csjform = function(def,callback,data){
     this.submit(function(){return false;})
         .prepend(template(templates.fieldset,{name:def.name,label:to_verbose(def.name,def)}))
         .children("fieldset")
@@ -108,7 +108,7 @@ $.fn.csjform = function(def,data){
     var obj = this.children("fieldset").eq(0);
 
     this.find("input#save").click(function(){
-        alert(tojson(def.fields,obj).toSource());
+        callback(tojson(def.fields,obj));
     });
 
     if(data) fromjson(def.fields,obj,data);

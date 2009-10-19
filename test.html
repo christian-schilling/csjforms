@@ -30,7 +30,9 @@ $("#eventgroup").csjform({
         }},
         blub_set:{inline:{foo:{widget:widgets.text}}},
     },
-});
+},function(data){alert(data.toSource());}
+//, {name:"1", description:"2", event_set:[{name:"3", jear:"4", event_date_set:[{date:"5"}, {date:"6"}]}, {name:"7", jear:"8", event_date_set:[]}], blub_set:[{foo:"9"}, {foo:"10"}]}
+);
 
 });
 </script>
