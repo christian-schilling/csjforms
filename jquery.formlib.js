@@ -12,8 +12,9 @@ $.csjforms= {
         },
     },
     templates:{
-        fieldset:'<fieldset><legend><%= label %></legend><input type="submit" name="del_<%= name %>" value="-"></fieldset>',
-        inline:'<div class="formset" title="<%= name %>"><h1><%= label %></h1><input type="submit" name="add_<%= name %>" value="+"></div>',
+        fieldset:'<fieldset><legend><%= label %></legend></fieldset>',
+        inlinefieldset:'<fieldset><legend><%= label %></legend><input type="submit" name="del_<%= name %>" value="-" class="delbutton"></fieldset>',
+        inline:'<div class="csjformset" title="<%= name %>"><h1><%= label %></h1><input type="submit" name="add_<%= name %>" value="+" class="addbutton"></div>',
     }, }; widgets = $.csjforms.widgets; templates = $.csjforms.templates;
 
 function ucfirst(str) {
@@ -29,60 +30,62 @@ function to_plural(name,opts) {
     else return to_verbose(name,opts)+'s';
 }
 
-tojson = function(def,obj) {
-    var jsonobj= new Object();
-    if(obj.is("fieldset")) {
-        obj.children().each(function(){
-            var id = $(this).attr('name') || $(this).attr('title');
-            if(id && def[id]) {
-                val = tojson(def[id],$(this));
-                jsonobj[id] = val;
-            }
-        });
-        return jsonobj;
-    } else if(obj.parent().is("fieldset")){
-        if(!def.inline){
-            return obj.val();
-        }else{
-            var jsonarray = [];
-            obj.children("fieldset").each(function(){
-                val = tojson(def.inline,$(this));
-                jsonarray.push(val);
-            });
-            return jsonarray;
-        }
-    };
+append_fieldset = function(formset,fieldname,opts) {
+    formset.children('.addbutton').before(
+        template(templates.inlinefieldset, {
+            name:fieldname,label:to_verbose(fieldname,opts)
+        })
+    );
+
+    formset.children('fieldset:last')
+           .csjfieldset(opts.inline)
+           .children("input.delbutton").click(function(){$(this).parent().remove();});
 };
 
-prepend_fieldset = function(obj,fieldname,opts) {
-
-    obj.before(template(templates.fieldset,{name:fieldname,label:to_verbose(fieldname,opts)}))
-       .prev()
-       .csjfieldset(opts.inline)
-       .children("input[value]=-").click(function(){$(this).parent().remove();});
+tojson = function(def,obj) {
+    if(obj.is("fieldset")) {
+        var jsonobj = new Object();
+        obj.children('.csjformset,.csjformfield').each(function(){
+            var id = $(this).attr('title');
+            jsonobj[id] = tojson(def[id],$(this));
+        });
+    }else if(obj.is('.csjformset')){
+        var jsonobj = [];
+        obj.children("fieldset").each(function(){
+            val = tojson(def.inline,$(this));
+            jsonobj.push(val);
+        });
+    }else if(obj.is(".csjformfield")){
+        jsonobj = obj.find('input,textarea,select').val();
+    }
+    return jsonobj;
 };
 
 fromjson = function(def,obj,jsonobj) {
     if(obj.is("fieldset")) {
-        obj.children().each(function(){
-            var id = $(this).attr('name') || $(this).attr('title');
-            if(id && def[id]) {
-                if(!def[id].inline) { $(this).val(jsonobj[id]);}
-                else if (jsonobj[id] != []){
-                    for(var i in jsonobj[id]){
-                        prepend_fieldset($(this).children('input[value=+]').eq(0),id,def[id]);
-                        fromjson(def[id].inline,$(this).children('fieldset:last'),jsonobj[id][i]);
-                    }
-                }
-            }
+        obj.children('.csjformset,.csjformfield').each(function(){
+            var id = $(this).attr('title');
+            fromjson(def[id],$(this),jsonobj[id],id);
         });
+    }else if(obj.is('.csjformset')){
+        for(var i in jsonobj){
+            append_fieldset(obj,obj.attr('title'),def);
+            fromjson(def.inline,obj.children('fieldset:last'),jsonobj[i]);
+        }
+    }else if(obj.is(".csjformfield")){
+        obj.find('input,textarea,select').val(jsonobj);
     }
 };
 
 $.fn.csjfieldset = function(def) {
 
     make_field = function(fieldname,opts) {
-        return template(opts.widget.template,{name:fieldname,label:to_verbose(fieldname,opts)});
+        return '<div class="csjformfield" title="'+fieldname+'">'
+              +template(opts.widget.template,{
+                    name:fieldname,
+                    label:to_verbose(fieldname,opts)
+               })
+              +'</div>';
     };
 
     var obj = this;
@@ -90,8 +93,8 @@ $.fn.csjfieldset = function(def) {
         if(opts.inline){
             obj.append(template(templates.inline,{name:fieldname,label:to_plural(fieldname,opts)}))
                .children("div[title="+fieldname+']')
-               .children("input[value=+]")
-               .click(function(){ prepend_fieldset($(this),fieldname,opts); });
+               .children("input.addbutton")
+               .click(function(){ append_fieldset($(this).parent(),fieldname,opts); });
         } else {
             obj.append(make_field(fieldname,opts));
         }

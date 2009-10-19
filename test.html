@@ -15,7 +15,7 @@ $(document).ready(function(){
 
 widgets = $.csjforms.widgets;
 
-$("#eventgroup").csjform({
+var opts = {
     name:"eventgroup",
     verbose:'Event group',
     fields:{
@@ -28,17 +28,31 @@ $("#eventgroup").csjform({
                 date:{widget:widgets.text},
             }},
         }},
-        blub_set:{inline:{foo:{widget:widgets.text}}},
-    },
-},function(data){alert(data.toSource());}
-//, {name:"1", description:"2", event_set:[{name:"3", jear:"4", event_date_set:[{date:"5"}, {date:"6"}]}, {name:"7", jear:"8", event_date_set:[]}], blub_set:[{foo:"9"}, {foo:"10"}]}
-);
+        blub_set:{inline:{
+            foo:{widget:widgets.text}
+        }},
+    }
+};
+
+testdata = {name:"1", description:"2", event_set:[{name:"3", jear:"4", event_date_set:[{date:"5"}, {date:"6"}]}, {name:"7", jear:"8", event_date_set:[]}], blub_set:[{foo:"9"}, {foo:"10"}]};
+
+$("#eventgroup").csjform(opts,function(out1){
+    $("#eventgroupout").csjform(opts,function(out2){
+        alert(out2.toSource() == testdata.toSource());
+    },out1);
+},testdata);
 
 });
 </script>
 </head>
 <body>
     <form method="post" action="#" id="eventgroup">
+        <div>
+            <input id="save" type="submit" value="submit" name="submit">
+        </div>
+    </form>
+
+    <form method="post" action="#" id="eventgroupout">
         <div>
             <input id="save" type="submit" value="submit" name="submit">
         </div>
