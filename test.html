@@ -14,25 +14,31 @@
 $(document).ready(function(){
 
 widgets = $.csjforms.widgets;
+fields = $.csjforms.fields;
+docs = $.csjforms.docs;
 
-var opts = {
-    name:"eventgroup",
-    verbose:'Event group',
-    fields:{
-        name:{widget:widgets.text,verbose:'Name'},
-        description:{widget:widgets.textarea},
-        event_set:{verbose:'Event',plural:'Events',inline:{
-            name:{widget:widgets.text},
-            jear:{widget:widgets.text},
-            event_date_set:{verbose:'Event date',inline:{
-                date:{widget:widgets.text},
-            }},
-        }},
-        blub_set:{inline:{
-            foo:{widget:widgets.text}
-        }},
-    }
-};
+var opts = new docs.Main({ name:"eventgroup", verbose:'Event group',
+    doc:{
+        name: new fields.Text({verbose:'Name',}),
+        description: new fields.Text({widget: new widgets.Textarea(),}),
+        event_set: new docs.Inline({verbose:'Event',plural:'Events',
+            doc:{
+                name: new fields.Text(),
+                jear: new fields.Text(),
+                event_date_set: new docs.Inline({verbose:'Event date',
+                    doc:{
+                        date: new fields.Text(),
+                    }
+                }),
+            }
+        }),
+        blub_set: new docs.Inline({
+            doc:{
+                foo: new fields.Text(),
+            }
+        }),
+    },
+});
 
 testdata = {name:"1", description:"2", event_set:[{name:"3", jear:"4", event_date_set:[{date:"5"}, {date:"6"}]}, {name:"7", jear:"8", event_date_set:[]}], blub_set:[{foo:"9"}, {foo:"10"}]};
 

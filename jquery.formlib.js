@@ -1,21 +1,42 @@
 (function($){
 
-$.csjforms= {
-    widgets:{
-        text: {
-            template:'<label><%= label %></label><input type="text" name="<%= name %>">',
-            tojson:function(val){return val;},
-        },
-        textarea: {
-            template:'<label><%= label %></label><textarea rows=20 cols=80 name="<%= name %>"></textarea>',
-            tojson:function(val){return val;},
-        },
-    },
+$.csjforms = {
     templates:{
         fieldset:'<fieldset><legend><%= label %></legend></fieldset>',
         inlinefieldset:'<fieldset><legend><%= label %></legend><input type="submit" name="del_<%= name %>" value="-" class="delbutton"></fieldset>',
-        inline:'<div class="csjformset" title="<%= name %>"><h1><%= label %></h1><input type="submit" name="add_<%= name %>" value="+" class="addbutton"></div>',
-    }, }; widgets = $.csjforms.widgets; templates = $.csjforms.templates;
+    },
+    widgets:{
+        Text: function(options) {
+            this.template = '<label><%= label %></label><input type="text" name="<%= name %>">';
+            for(var i in options) this[i] = options[i];
+        },
+        Textarea: function(options) {
+            this.Super = $.csjforms.widgets.Text;this.Super(options);
+            this.template = '<label><%= label %></label><textarea rows=20 cols=80 name="<%= name %>"></textarea>';
+            for(var i in options) this[i] = options[i];
+        },
+    },
+    fields:{
+        Text: function(options) {
+            this.widget = new $.csjforms.widgets.Text();
+            this.tojson = function(val){return val;};
+            for(var i in options) this[i] = options[i];
+        },
+    },
+    docs:{
+        Main: function(options) {
+            for(var i in options) this[i] = options[i];
+        },
+        Inline: function(options) {
+            this.template ='<div class="csjformset" title="<%= name %>">'
+                          +'    <h1><%= label %></h1>'
+                          +'    <input type="submit" name="add_<%= name %>" value="+" class="addbutton">'
+                          +'</div>';
+            this.doc = {};
+            for(var i in options) this[i] = options[i];
+        },
+    },
+};
 
 function ucfirst(str) {
     var firstLetter = str.substr(0, 1);
@@ -32,13 +53,13 @@ function to_plural(name,opts) {
 
 append_fieldset = function(formset,fieldname,opts) {
     formset.children('.addbutton').before(
-        template(templates.inlinefieldset, {
+        template($.csjforms.templates.inlinefieldset, {
             name:fieldname,label:to_verbose(fieldname,opts)
         })
     );
 
     formset.children('fieldset:last')
-           .csjfieldset(opts.inline)
+           .csjfieldset(opts.doc)
            .children("input.delbutton").click(function(){$(this).parent().remove();});
 };
 
@@ -52,7 +73,7 @@ tojson = function(def,obj) {
     }else if(obj.is('.csjformset')){
         var jsonobj = [];
         obj.children("fieldset").each(function(){
-            val = tojson(def.inline,$(this));
+            val = tojson(def.doc,$(this));
             jsonobj.push(val);
         });
     }else if(obj.is(".csjformfield")){
@@ -70,7 +91,7 @@ fromjson = function(def,obj,jsonobj) {
     }else if(obj.is('.csjformset')){
         for(var i in jsonobj){
             append_fieldset(obj,obj.attr('title'),def);
-            fromjson(def.inline,obj.children('fieldset:last'),jsonobj[i]);
+            fromjson(def.doc,obj.children('fieldset:last'),jsonobj[i]);
         }
     }else if(obj.is(".csjformfield")){
         obj.find('input,textarea,select').val(jsonobj);
@@ -90,8 +111,8 @@ $.fn.csjfieldset = function(def) {
 
     var obj = this;
     $.each(def,function(fieldname,opts){
-        if(opts.inline){
-            obj.append(template(templates.inline,{name:fieldname,label:to_plural(fieldname,opts)}))
+        if(opts.doc){
+            obj.append(template(opts.template,{name:fieldname,label:to_plural(fieldname,opts)}))
                .children("div[title="+fieldname+']')
                .children("input.addbutton")
                .click(function(){ append_fieldset($(this).parent(),fieldname,opts); });
@@ -104,17 +125,17 @@ $.fn.csjfieldset = function(def) {
 
 $.fn.csjform = function(def,callback,data){
     this.submit(function(){return false;})
-        .prepend(template(templates.fieldset,{name:def.name,label:to_verbose(def.name,def)}))
+        .prepend(template($.csjforms.templates.fieldset,{name:def.name,label:to_verbose(def.name,def)}))
         .children("fieldset")
-        .csjfieldset(def.fields);
+        .csjfieldset(def.doc);
 
     var obj = this.children("fieldset").eq(0);
 
     this.find("input#save").click(function(){
-        callback(tojson(def.fields,obj));
+        callback(tojson(def.doc,obj));
     });
 
-    if(data) fromjson(def.fields,obj,data);
+    if(data) fromjson(def.doc,obj,data);
 };
 
 })(jQuery);
