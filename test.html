@@ -17,24 +17,24 @@ widgets = $.csjforms.widgets;
 fields = $.csjforms.fields;
 docs = $.csjforms.docs;
 
-var opts = new docs.Main({ name:"eventgroup", verbose:'Event group',
+var opts = docs.main({ name:"eventgroup", verbose:'Event group',
     doc:{
-        name: new fields.Text({verbose:'Name',}),
-        description: new fields.Text({widget: new widgets.Textarea(),}),
-        event_set: new docs.Inline({verbose:'Event',plural:'Events',
+        name: fields.text({verbose:'Name',}),
+        description: fields.text({widget: widgets.textarea(),}),
+        event_set: docs.inline({verbose:'Event',plural:'Events',
             doc:{
-                name: new fields.Text(),
-                jear: new fields.Text(),
-                event_date_set: new docs.Inline({verbose:'Event date',
+                name: fields.text(),
+                jear: fields.text(),
+                event_date_set: docs.inline({verbose:'Event date',
                     doc:{
-                        date: new fields.Text(),
+                        date: fields.text(),
                     }
                 }),
             }
         }),
-        blub_set: new docs.Inline({
+        blub_set: docs.inline({
             doc:{
-                foo: new fields.Text(),
+                foo: fields.text(),
             }
         }),
     },

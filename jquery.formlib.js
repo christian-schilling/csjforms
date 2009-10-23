@@ -1,39 +1,49 @@
 (function($){
 
+var extend = function(dest,src) {
+    for(var i in src) {
+         dest[i] = src[i];
+    }
+    return dest;
+};
+
 $.csjforms = {
     templates:{
         fieldset:'<fieldset><legend><%= label %></legend></fieldset>',
         inlinefieldset:'<fieldset><legend><%= label %></legend><input type="submit" name="del_<%= name %>" value="-" class="delbutton"></fieldset>',
     },
     widgets:{
-        Text: function(options) {
-            this.template = '<label><%= label %></label><input type="text" name="<%= name %>">';
-            for(var i in options) this[i] = options[i];
+        text: function(options) {
+            return extend({
+                template : '<label><%= label %></label><input type="text" name="<%= name %>">',
+            },options);
         },
-        Textarea: function(options) {
-            this.Super = $.csjforms.widgets.Text;this.Super(options);
-            this.template = '<label><%= label %></label><textarea rows=20 cols=80 name="<%= name %>"></textarea>';
-            for(var i in options) this[i] = options[i];
+        textarea: function(options) {
+            return extend(extend($.csjforms.widgets.text(),{
+                template : '<label><%= label %></label><textarea rows=20 cols=80 name="<%= name %>"></textarea>',
+            }),options);
         },
     },
     fields:{
-        Text: function(options) {
-            this.widget = new $.csjforms.widgets.Text();
-            this.tojson = function(val){return val;};
-            for(var i in options) this[i] = options[i];
+        text: function(options) {
+            return extend({
+                widget : $.csjforms.widgets.text(),
+                tojson : function(val){return val;},
+            },options);
         },
     },
     docs:{
-        Main: function(options) {
-            for(var i in options) this[i] = options[i];
+        main: function(options) {
+            return options
         },
-        Inline: function(options) {
-            this.template ='<div class="csjformset" title="<%= name %>">'
-                          +'    <h1><%= label %></h1>'
-                          +'    <input type="submit" name="add_<%= name %>" value="+" class="addbutton">'
-                          +'</div>';
-            this.doc = {};
-            for(var i in options) this[i] = options[i];
+        inline: function(options) {
+            return extend({
+                template :'<div class="csjformset" title="<%= name %>">'
+                         +'    <h1><%= label %></h1>'
+                         +'    <input type="submit" name="add_<%= name %>" value="+" class="addbutton">'
+                         +'</div>',
+                doc : {},
+            },options);
         },
     },
 };
@@ -116,7 +126,7 @@ $.fn.csjfieldset = function(def) {
                .children("div[title="+fieldname+']')
                .children("input.addbutton")
                .click(function(){ append_fieldset($(this).parent(),fieldname,opts); });
-        } else {
+        } else if (opts.widget) {
             obj.append(make_field(fieldname,opts));
         }
     });
