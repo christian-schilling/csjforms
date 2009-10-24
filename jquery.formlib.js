@@ -22,9 +22,6 @@ var to_plural = function(opts) {
 
 
 csjforms = {
-    templates:{
-        fieldset:'<fieldset><legend><%= label %></legend></fieldset>',
-    },
     widgets:{
         text: function(options) {
             return extend({
@@ -34,8 +31,9 @@ csjforms = {
                     var jqs = jqs.children('[name='+this.name+']');
                     return jqs;
                 },
-                tojson : function(jqs) { return jqs.val(); },
-                fromjson : function(jqs,jsonobj) { jqs.val(jsonobj);}
+                tojson : function(jqs) { return this.validate(jqs.val()); },
+                fromjson : function(jqs,jsonobj) { jqs.val(this.validate(jsonobj));},
+                validate : function(jsonobj) { return jsonobj; },
             },options);
         },
         textarea: function(options) {
@@ -49,10 +47,10 @@ csjforms = {
             return extend({
                 widget : csjforms.widgets.text(),
                 tojson : function(jqs){
-                    return this.widget.tojson(jqs.children('[name='+this.name+']'));
+                    return this.validate(this.widget.tojson(jqs.children('[name='+this.name+']')));
                 },
                 fromjson : function(jqs,jsonobj){
-                    this.widget.fromjson(jqs.children('[name='+this.name+']'),jsonobj);
+                    this.widget.fromjson(jqs.children('[name='+this.name+']'),this.validate(jsonobj));
                 },
                 create : function(parentdef,jqs) {
                     jqs.append('<div class="csjformfield" title="'+this.name+'"></div>');
@@ -60,6 +58,7 @@ csjforms = {
                     this.widget.create(this,jqs);
                     return jqs;
                 },
+                validate : function(jsonobj) { return jsonobj; },
             },options);
         },
     },
@@ -87,21 +86,23 @@ csjforms = {
                     field = this.fields[i];
                     jsonobj[field.name] = field.tojson(jqs.children('[title='+field.name+']'));
                 }
-                return jsonobj;
+                return this.validate(jsonobj);
             },
             fromjson : function(jqs,jsonobj){
+                var jsonobj = this.validate(jsonobj);
                 var field;
                 for(var i in this.fields) {
                     field = this.fields[i];
                     field.fromjson(jqs.children('[title='+field.name+']'),jsonobj[field.name]);
                 }
             },
+            validate : function(jsonobj) { return jsonobj; },
         },options);
     },
     inline: function(options) {
         return extend({
             template :'<div class="csjformset" title="<%= name %>">'
-                     +'    <h1><%= label %></h1>'
+                     +'    <h1><%= label %></h1><div class="container"></div>'
                      +'    <input type="submit" name="add_<%= name %>" value="+" class="addbutton">'
                      +'</div>',
             create : function(parentdef,jqs) {
@@ -115,21 +116,23 @@ csjforms = {
                 return jqs;
             },
             append_fieldset : function(jqs) {
-                return this.fieldset.create(this,jqs);
+                return this.fieldset.create(this,jqs.children('.container'));
             },
             tojson : function(jqs) {
                 var jsonobj = [];
                 var that = this;
-                jqs.children('fieldset').each(function(){
+                jqs.children('.container').children('fieldset').each(function(){
                     jsonobj.push(that.fieldset.tojson($(this)));
                 });
-                return jsonobj;
+                return this.validate(jsonobj);
             },
             fromjson : function(jqs,jsonobj){
+                var jsonobj = this.validate(jsonobj);
                 for(var i in jsonobj){
                     this.fieldset.fromjson(this.append_fieldset(jqs),jsonobj[i]);
                 }
             },
+            validate : function(jsonobj) { return jsonobj; },
         },options);
     },
 };

@@ -7,6 +7,8 @@
 
 <script type="text/javascript" src="template.js"></script>
 <script type="text/javascript" src="jquery-1.3.2.min.js"></script>
+<script type="text/javascript" src="qunit.js"></script>
+<link rel='stylesheet' href='qunit.css' type='text/css'>
 <script type="text/javascript" src="jquery.formlib.js"></script>
 <script type="text/javascript" charset="utf-8">
 
@@ -46,28 +48,26 @@ testdata = {name:"1", description:"2", event_set:[{name:"3", jear:"4", event_dat
 //        alert(out2.toSource() == testdata.toSource());
 //    },out1);
 //},testdata);
-var fieldset = eventgroup.create(null,$('#eventgroup'));
-eventgroup.fromjson(fieldset,testdata);
-$('#eventgroup').find('input#save').click(function(){
-    alert(eventgroup.tojson(fieldset).toSource());
-    return false;
+var fieldset = eventgroup.create(null,$('#eventgroup > .container'));
+test('bal',function(){
+    eventgroup.fromjson(fieldset,testdata);
+    equals(testdata.toSource(),eventgroup.tojson(fieldset).toSource());
+});
 });
 
-});
 </script>
 </head>
 <body>
-    <form method="post" action="#" id="eventgroup">
+    <form method="post" action="#" id="eventgroup" style='display:none;'>
+        <div class='container'></div>
         <div>
             <input id="save" type="submit" value="submit" name="submit">
         </div>
     </form>
-
-    <form method="post" action="#" id="eventgroupout">
-        <div>
-            <input id="save" type="submit" value="submit" name="submit">
-        </div>
-    </form>
+ <h1 id="qunit-header">QUnit</h1>
+ <h2 id="qunit-banner"></h2>
+ <h2 id="qunit-userAgent"></h2>
+ <ol id="qunit-tests"></ol>
 
 </body>
 </html>
