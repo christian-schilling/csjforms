@@ -31,7 +31,7 @@ csjforms = {
                     var jqs = jqs.children('[name='+this.name+']');
                     return jqs;
                 },
-                tojson : function(jqs) { return this.validate(jqs.val()); },
+                tojson : function(jqs) { return this.validate(jqs.val());},
                 fromjson : function(jqs,jsonobj) { jqs.val(this.validate(jsonobj));},
                 validate : function(jsonobj) { return jsonobj; },
             },options);
@@ -54,7 +54,13 @@ csjforms = {
             return extend({
                 widget : csjforms.widgets.text(),
                 tojson : function(jqs){
-                    return this.validate(this.widget.tojson(jqs.children('[name='+this.name+']')));
+                    jqs.children('p.error').remove();
+                    try{
+                        return this.validate(this.widget.tojson(jqs.children('[name='+this.name+']')));
+                    }catch(e){
+                        jqs.append('<p class="error">'+e.message+'</p>');
+                        throw e;
+                    }
                 },
                 fromjson : function(jqs,jsonobj){
                     this.widget.fromjson(jqs.children('[name='+this.name+']'),this.validate(jsonobj));
@@ -65,18 +71,54 @@ csjforms = {
                     this.widget.create(this,jqs);
                     return jqs;
                 },
-                validate : function(jsonobj) { return jsonobj; },
+                validate : csjforms.validators.notblank(),
             },options);
         },
         bool: function(options) {
             return extend(extend(csjforms.fields.text(),{
                 widget : csjforms.widgets.bool(),
+                validate: function(jsonobj) { return jsonobj;},
             }),options);
+        },
+        integer: function(options) {
+            return extend(extend(csjforms.fields.text(),{
+                validate:csjforms.validators.integer(),
+                texttojson:csjforms.fields.text().tojson,
+                tojson: function(jqs) {
+                    return this.validate(parseInt(this.texttojson(jqs),10));
+                },
+            }),options);
+        },
+    },
+    validators: {
+        notblank: function() {
+            return function(jsonobj){
+                if(!jsonobj) throw {name:'ValidationError',message:'must not be emtpy'};
+                else return jsonobj;
+            };
+        },
+        regex: function(re) {
+            return function(jsonobj) {
+                if(!re.test(jsonobj)) throw {
+                    name:'ValidationError',
+                    message:'invalid value',
+                };
+                else return jsonobj;
+            };
+        },
+        integer: function() {
+            return function(jsonobj) {
+                try{
+                    return csjforms.validators.regex(/^\d+$/)(jsonobj);
+                }catch(e){
+                    throw extend(e,{message:'not an integer'});
+                }
+            };
         },
     },
     fieldset: function(options) {
         return extend({
-            template:'<fieldset><legend><%= label %></legend></fieldset>',
+            template:'<fieldset class="<%= name %>"><legend><%= label %></legend></fieldset>',
             delbutton:'<input type="submit" name="del_<%= name %>" value="-" class="delbutton">',
             fields : [],
             create : function(parentdef,jqs) {
@@ -93,11 +135,14 @@ csjforms = {
             },
             tojson : function(jqs) {
                 var jsonobj = {};
+                var errors = [];
                 var field;
                 for(var i in this.fields) {
                     field = this.fields[i];
-                    jsonobj[field.name] = field.tojson(jqs.children('[title='+field.name+']'));
+                    try{ jsonobj[field.name] = field.tojson(jqs.children('[title='+field.name+']'));}
+                    catch(e) {errors.push(e);}
                 }
+                if(errors.length) throw {name:'ValidationError',errors:errors};
                 return this.validate(jsonobj);
             },
             fromjson : function(jqs,jsonobj){
@@ -132,10 +177,13 @@ csjforms = {
             },
             tojson : function(jqs) {
                 var jsonobj = [];
+                var errors = [];
                 var that = this;
                 jqs.children('.container').children('fieldset').each(function(){
-                    jsonobj.push(that.fieldset.tojson($(this)));
+                    try{jsonobj.push(that.fieldset.tojson($(this)));}
+                    catch(e){errors.push(e);}
                 });
+                if(errors.length) throw {name:'ValidationError',errors:errors};
                 return this.validate(jsonobj);
             },
             fromjson : function(jqs,jsonobj){
