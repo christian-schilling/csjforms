@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+<head>
+<title>Test</title>
+
+<script type="text/javascript" src="template.js"></script>
+<script type="text/javascript" src="jquery-1.3.2.min.js"></script>
+<link rel='stylesheet' href='form.css' type='text/css'>
+<script type="text/javascript" src="jquery.formlib.js"></script>
+<script type="text/javascript" charset="utf-8">
+
+
+$(document).ready(function(){
+
+var widgets = csjforms.widgets;
+var fields = csjforms.fields;
+var fieldset = csjforms.fieldset;
+var inline = csjforms.inline;
+
+var eventgroup = fieldset({name:"eventgroup", verbose:'Event group',fields:[
+    fields.bool({name:'active'}),
+    fields.integer({name:'name',verbose:'Name'}),
+    fields.text({name:'description',widget: widgets.textarea(),}),
+    inline({name:'event_set',verbose:'Event',plural:'Events',
+        fieldset:fieldset({name:'event',fields:[
+            fields.text({name:'name'}),
+            fields.text({name:'jear'}),
+            inline({name:'event_date_set',verbose:'Event date',
+                fieldset:fieldset({name:'event_date',fields:[
+                    fields.text({name:'date'}),
+                ]}),
+            }),
+        ]}),
+    }),
+    inline({name:'blub_set',
+        fieldset:fieldset({name:'blub',fields:[
+            fields.text({name:'foo'}),
+        ]}),
+    }),
+]});
+
+var fieldset = eventgroup.create(null,$('#eventgroup > .container'));
+$('#eventgroup').find('input#save').click(function(){
+    try{
+        alert(eventgroup.tojson(fieldset).toSource());
+    }catch(e){
+        alert(e.toSource());
+    }finally{
+        return false;
+    }
+});
+
+});
+
+</script>
+</head>
+<body>
+    <form method="post" action="#" id="eventgroup">
+        <div class='container'></div>
+        <div>
+            <input id="save" type="submit" value="submit" name="submit">
+        </div>
+    </form>
+</body>
+</html>

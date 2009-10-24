@@ -1,0 +1,80 @@
+* {padding:0em;margin:0em;border:0em;}
+
+form {
+    font-family:sans-serif;
+    width:50em;
+    line-height:1.5em;
+    margin:1.5em;
+}
+
+form h1 {
+    font-size:1.5em;
+    line-height:1em;
+    background:#eeeeee;
+}
+
+fieldset {
+    background:#dddddd;
+    border:0.1em solid #aaaaaa;
+    border-top:1.4em solid #aaaaaa;
+}
+fieldset > legend {
+    width:100%;
+    background:#aaaaaa;
+    color:white;
+    font-weight:bold;
+    line-height:1.4em;
+}
+
+.csjformfield, .csjformset {
+    margin-bottom:1.5em;
+    border:0.75em solid #dddddd;
+}
+.csjformset {
+    border:0.75em solid #eeeeee;
+    overflow:hidden;
+}
+
+.csjformfield > label {
+    width:100%;
+    display:block;
+}
+
+textarea {
+    width:100%;
+}
+
+textarea, input {
+    border:0.1em solid #aaaaaa;
+}
+
+input.delbutton, input.addbutton {
+    float:right;
+    width:2em;
+    font-weight:bold;
+}
+
+input.delbutton {
+    background:#ffaa99;
+}
+
+fieldset.event > .csjformfield {
+    float:left;
+}
+fieldset.event > .csjformset {
+    clear:both;
+}
+
+fieldset.eventgroup > .csjformfield[title='active'],
+fieldset.eventgroup > .csjformfield[title='name']
+{
+    float:left;
+}
+fieldset.eventgroup > .csjformfield[title='description'] {
+    clear:both;
+}
+
+p.error {
+    font-weight:bold;
+    color:red;
+}
