@@ -21,6 +21,7 @@ var fieldset = csjforms.fieldset;
 var inline = csjforms.inline;
 
 var eventgroup = fieldset({name:"eventgroup", verbose:'Event group',fields:[
+    fields.bool({name:'active'}),
     fields.text({name:'name',verbose:'Name',}),
     fields.text({name:'description',widget: widgets.textarea(),}),
     inline({name:'event_set',verbose:'Event',plural:'Events',
@@ -41,18 +42,15 @@ var eventgroup = fieldset({name:"eventgroup", verbose:'Event group',fields:[
     }),
 ]});
 
-testdata = {name:"1", description:"2", event_set:[{name:"3", jear:"4", event_date_set:[{date:"5"}, {date:"6"}]}, {name:"7", jear:"8", event_date_set:[]}], blub_set:[{foo:"9"}, {foo:"10"}]};
+testdata = {active:true,name:"1", description:"2", event_set:[{name:"3", jear:"4", event_date_set:[{date:"5"}, {date:"6"}]}, {name:"7", jear:"8", event_date_set:[]}], blub_set:[{foo:"9"}, {foo:"10"}]};
 
-//$("#eventgroup").csjform(eventgroup,function(out1){
-//    $("#eventgroupout").csjform(eventgroup,function(out2){
-//        alert(out2.toSource() == testdata.toSource());
-//    },out1);
-//},testdata);
 var fieldset = eventgroup.create(null,$('#eventgroup > .container'));
-test('bal',function(){
+test('fromjson -> tojson',function(){
     eventgroup.fromjson(fieldset,testdata);
     equals(testdata.toSource(),eventgroup.tojson(fieldset).toSource());
 });
+
+
 });
 
 </script>

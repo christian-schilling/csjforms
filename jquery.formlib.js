@@ -41,6 +41,13 @@ csjforms = {
                 template : '<label><%= label %></label><textarea rows=20 cols=80 name="<%= name %>"></textarea>',
             }),options);
         },
+        bool: function(options) {
+            return extend(extend(csjforms.widgets.text(),{
+                template : '<label><%= label %></label><input type="checkbox" name="<%= name %>" value="<%= name %>">',
+                tojson : function(jqs){ return jqs.filter(':checked').size() ? true:false; },
+                fromjson : function(jqs,jsonobj) { jqs.val(jsonobj?[jqs.attr('name')]:[]); },
+            }),options);
+        },
     },
     fields:{
         text: function(options) {
@@ -60,6 +67,11 @@ csjforms = {
                 },
                 validate : function(jsonobj) { return jsonobj; },
             },options);
+        },
+        bool: function(options) {
+            return extend(extend(csjforms.fields.text(),{
+                widget : csjforms.widgets.bool(),
+            }),options);
         },
     },
     fieldset: function(options) {
@@ -106,7 +118,7 @@ csjforms = {
                      +'    <input type="submit" name="add_<%= name %>" value="+" class="addbutton">'
                      +'</div>',
             create : function(parentdef,jqs) {
-                jqs.append(template(this.template,{name:this.name,label:to_verbose(this)}));
+                jqs.append(template(this.template,{name:this.name,label:to_plural(this)}));
                 var jqs = jqs.children('.csjformset[title='+this.name+']');
                 var that = this;
                 jqs.children('input.addbutton[name=add_'+this.name+']').click(function(){
