@@ -13,40 +13,45 @@
 
 $(document).ready(function(){
 
-widgets = $.csjforms.widgets;
-fields = $.csjforms.fields;
-docs = $.csjforms.docs;
+var widgets = csjforms.widgets;
+var fields = csjforms.fields;
+var fieldset = csjforms.fieldset;
+var inline = csjforms.inline;
 
-var opts = docs.main({ name:"eventgroup", verbose:'Event group',
-    doc:{
-        name: fields.text({verbose:'Name',}),
-        description: fields.text({widget: widgets.textarea(),}),
-        event_set: docs.inline({verbose:'Event',plural:'Events',
-            doc:{
-                name: fields.text(),
-                jear: fields.text(),
-                event_date_set: docs.inline({verbose:'Event date',
-                    doc:{
-                        date: fields.text(),
-                    }
-                }),
-            }
-        }),
-        blub_set: docs.inline({
-            doc:{
-                foo: fields.text(),
-            }
-        }),
-    },
-});
+var eventgroup = fieldset({name:"eventgroup", verbose:'Event group',fields:[
+    fields.text({name:'name',verbose:'Name',}),
+    fields.text({name:'description',widget: widgets.textarea(),}),
+    inline({name:'event_set',verbose:'Event',plural:'Events',
+        fieldset:fieldset({name:'event',fields:[
+            fields.text({name:'name'}),
+            fields.text({name:'jear'}),
+            inline({name:'event_date_set',verbose:'Event date',
+                fieldset:fieldset({name:'event_date',fields:[
+                    fields.text({name:'date'}),
+                ]}),
+            }),
+        ]}),
+    }),
+    inline({name:'blub_set',
+        fieldset:fieldset({name:'blub',fields:[
+            fields.text({name:'foo'}),
+        ]}),
+    }),
+]});
 
 testdata = {name:"1", description:"2", event_set:[{name:"3", jear:"4", event_date_set:[{date:"5"}, {date:"6"}]}, {name:"7", jear:"8", event_date_set:[]}], blub_set:[{foo:"9"}, {foo:"10"}]};
 
-$("#eventgroup").csjform(opts,function(out1){
-    $("#eventgroupout").csjform(opts,function(out2){
-        alert(out2.toSource() == testdata.toSource());
-    },out1);
-},testdata);
+//$("#eventgroup").csjform(eventgroup,function(out1){
+//    $("#eventgroupout").csjform(eventgroup,function(out2){
+//        alert(out2.toSource() == testdata.toSource());
+//    },out1);
+//},testdata);
+var fieldset = eventgroup.create(null,$('#eventgroup'));
+eventgroup.fromjson(fieldset,testdata);
+$('#eventgroup').find('input#save').click(function(){
+    alert(eventgroup.tojson(fieldset).toSource());
+    return false;
+});
 
 });
 </script>
