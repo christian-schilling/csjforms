@@ -22,7 +22,7 @@ var inline = csjforms.inline;
 
 var eventgroup = fieldset({name:"eventgroup", verbose:'Event group',fields:[
     fields.bool({name:'active'}),
-    fields.text({name:'name',verbose:'Name',}),
+    fields.integer({name:'name',verbose:'Name',}),
     fields.text({name:'description',widget: widgets.textarea(),}),
     inline({name:'event_set',verbose:'Event',plural:'Events',
         fieldset:fieldset({name:'event',fields:[
@@ -42,12 +42,29 @@ var eventgroup = fieldset({name:"eventgroup", verbose:'Event group',fields:[
     }),
 ]});
 
-testdata = {active:true,name:"1", description:"2", event_set:[{name:"3", jear:"4", event_date_set:[{date:"5"}, {date:"6"}]}, {name:"7", jear:"8", event_date_set:[]}], blub_set:[{foo:"9"}, {foo:"10"}]};
+var testdata = {active:true,name:1, description:"2", event_set:[{name:"3", jear:"4", event_date_set:[{date:"5"}, {date:"6"}]}, {name:"7", jear:"8", event_date_set:[]}], blub_set:[{foo:"9"}, {foo:"10"}]};
 
 var fieldset = eventgroup.create(null,$('#eventgroup > .container'));
 test('fromjson -> tojson',function(){
     eventgroup.fromjson(fieldset,testdata);
     equals(testdata.toSource(),eventgroup.tojson(fieldset).toSource());
+});
+
+test('validate doc',function(){
+    var exc = null;
+    try{
+        eventgroup.validate_doc(testdata);
+    }catch(e){
+        exc = e;
+    }
+    equals(exc,null);
+    var testdata2 = {active:true,name:"1a", description:"2", event_set:[{name:"3", jear:"4", event_date_set:[{date:"5"}, {date:"6"}]}, {name:"7", jear:"8", event_date_set:[]}], blub_set:[{foo:"9"}, {foo:"10"}]};
+    try{
+        eventgroup.validate_doc(testdata2);
+    }catch(e){
+        exc = e;
+    }
+    equals(exc.toSource(),{"name": "ValidationError", "message": "not an integer"}.toSource());
 });
 
 

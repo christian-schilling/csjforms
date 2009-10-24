@@ -34,6 +34,7 @@ csjforms = {
                 tojson : function(jqs) { return this.validate(jqs.val());},
                 fromjson : function(jqs,jsonobj) { jqs.val(this.validate(jsonobj));},
                 validate : function(jsonobj) { return jsonobj; },
+                validate_doc : function(jsonobj) { this.validate(jsonobj)},
             },options);
         },
         textarea: function(options) {
@@ -72,6 +73,10 @@ csjforms = {
                     return jqs;
                 },
                 validate : csjforms.validators.notblank(),
+                validate_doc : function(jsonobj) {
+                    this.validate(jsonobj);
+                    this.widget.validate_doc(jsonobj);
+                },
             },options);
         },
         bool: function(options) {
@@ -154,6 +159,14 @@ csjforms = {
                 }
             },
             validate : function(jsonobj) { return jsonobj; },
+            validate_doc : function(jsonobj) {
+                var jsonobj = this.validate(jsonobj);
+                var field;
+                for(var i in this.fields) {
+                    field = this.fields[i];
+                    field.validate_doc(jsonobj[field.name]);
+                }
+            },
         },options);
     },
     inline: function(options) {
@@ -193,6 +206,12 @@ csjforms = {
                 }
             },
             validate : function(jsonobj) { return jsonobj; },
+            validate_doc : function(jsonobj) {
+                var jsonobj = this.validate(jsonobj);
+                for(var i in jsonobj){
+                    this.fieldset.validate_doc(jsonobj[i]);
+                }
+            },
         },options);
     },
 };
