@@ -28,13 +28,10 @@ csjforms = {
                 template : '<label><%= label %></label><input type="text" name="<%= name %>">',
                 create : function(parentdef,jqs) {
                     jqs.append(template(this.template,{name:parentdef.name,label:to_verbose(parentdef)}));
-                    var jqs = jqs.children('[name='+this.name+']');
-                    return jqs;
+                    return jqs.children('[name='+parentdef.name+']');
                 },
-                tojson : function(jqs) { return this.validate(jqs.val());},
-                fromjson : function(jqs,jsonobj) { jqs.val(this.validate(jsonobj));},
-                validate : function(jsonobj) { return jsonobj; },
-                validate_doc : function(jsonobj) { this.validate(jsonobj)},
+                tojson : function(jqs) { return jqs.val();},
+                fromjson : function(jqs,jsonobj) { jqs.val(jsonobj);},
             },options);
         },
         textarea: function(options) {
@@ -49,6 +46,17 @@ csjforms = {
                 fromjson : function(jqs,jsonobj) { jqs.val(jsonobj?[jqs.attr('name')]:[]); },
             }),options);
         },
+        hidden: function(options) {
+            return extend(extend(csjforms.widgets.text(),{
+                template : '<input type="hidden" name="<%= name %>">',
+                supercreate : csjforms.widgets.text().create,
+                create : function(parentdef,jqs){
+                    var r = this.supercreate(parentdef,jqs);
+                    r.parent().hide();
+                    return r;
+                },
+            }),options);
+        },
     },
     fields:{
         text: function(options) {
@@ -57,14 +65,17 @@ csjforms = {
                 tojson : function(jqs){
                     jqs.children('p.error').remove();
                     try{
-                        return this.validate(this.widget.tojson(jqs.children('[name='+this.name+']')));
+                        var jsonobj = this.widget.tojson(jqs.children('[name='+this.name+']'))
+                        for(var i in this.validate){this.validate[i](jsonobj);}
+                        return jsonobj;
                     }catch(e){
                         jqs.append('<p class="error">'+e.message+'</p>');
                         throw e;
                     }
                 },
                 fromjson : function(jqs,jsonobj){
-                    this.widget.fromjson(jqs.children('[name='+this.name+']'),this.validate(jsonobj));
+                    for(var i in this.validate){this.validate[i](jsonobj);}
+                    this.widget.fromjson(jqs.children('[name='+this.name+']'),jsonobj);
                 },
                 create : function(parentdef,jqs) {
                     jqs.append('<div class="csjformfield" title="'+this.name+'"></div>');
@@ -72,25 +83,26 @@ csjforms = {
                     this.widget.create(this,jqs);
                     return jqs;
                 },
-                validate : csjforms.validators.notblank(),
+                validate : [csjforms.validators.notblank(),],
                 validate_doc : function(jsonobj) {
-                    this.validate(jsonobj);
-                    this.widget.validate_doc(jsonobj);
+                    for(var i in this.validate){this.validate[i](jsonobj);}
                 },
             },options);
         },
         bool: function(options) {
             return extend(extend(csjforms.fields.text(),{
                 widget : csjforms.widgets.bool(),
-                validate: function(jsonobj) { return jsonobj;},
+                validate: [],
             }),options);
         },
         integer: function(options) {
             return extend(extend(csjforms.fields.text(),{
-                validate:csjforms.validators.integer(),
+                validate:[csjforms.validators.notblank(),csjforms.validators.integer(),],
                 texttojson:csjforms.fields.text().tojson,
                 tojson: function(jqs) {
-                    return this.validate(parseInt(this.texttojson(jqs),10));
+                    var jsonobj = parseInt(this.texttojson(jqs),10);
+                    for(var i in this.validate){this.validate[i](jsonobj);}
+                    return jsonobj;
                 },
             }),options);
         },
@@ -99,22 +111,19 @@ csjforms = {
         notblank: function() {
             return function(jsonobj){
                 if(!jsonobj) throw {name:'ValidationError',message:'must not be emtpy'};
-                else return jsonobj;
             };
         },
         regex: function(re) {
             return function(jsonobj) {
-                if(!re.test(jsonobj)) throw {
-                    name:'ValidationError',
-                    message:'invalid value',
-                };
-                else return jsonobj;
+                if(!jsonobj) {return;}
+                if(!re.test(jsonobj)) throw { name:'ValidationError', message:'invalid value', };
             };
         },
         integer: function() {
             return function(jsonobj) {
+                if(!jsonobj) {return;}
                 try{
-                    return csjforms.validators.regex(/^\d+$/)(jsonobj);
+                    csjforms.validators.regex(/^\d+$/)(jsonobj);
                 }catch(e){
                     throw extend(e,{message:'not an integer'});
                 }
@@ -148,19 +157,20 @@ csjforms = {
                     catch(e) {errors.push(e);}
                 }
                 if(errors.length) throw {name:'ValidationError',errors:errors};
-                return this.validate(jsonobj);
+                for(var i in this.validate){this.validate[i](jsonobj);}
+                return jsonobj;
             },
             fromjson : function(jqs,jsonobj){
-                var jsonobj = this.validate(jsonobj);
+                for(var i in this.validate){this.validate[i](jsonobj);}
                 var field;
                 for(var i in this.fields) {
                     field = this.fields[i];
                     field.fromjson(jqs.children('[title='+field.name+']'),jsonobj[field.name]);
                 }
             },
-            validate : function(jsonobj) { return jsonobj; },
+            validate : [],
             validate_doc : function(jsonobj) {
-                var jsonobj = this.validate(jsonobj);
+                for(var i in this.validate){this.validate[i](jsonobj);}
                 var field;
                 for(var i in this.fields) {
                     field = this.fields[i];
@@ -197,17 +207,18 @@ csjforms = {
                     catch(e){errors.push(e);}
                 });
                 if(errors.length) throw {name:'ValidationError',errors:errors};
-                return this.validate(jsonobj);
+                for(var i in this.validate){this.validate[i](jsonobj);}
+                return jsonobj;
             },
             fromjson : function(jqs,jsonobj){
-                var jsonobj = this.validate(jsonobj);
+                for(var i in this.validate){this.validate[i](jsonobj);}
                 for(var i in jsonobj){
                     this.fieldset.fromjson(this.append_fieldset(jqs),jsonobj[i]);
                 }
             },
-            validate : function(jsonobj) { return jsonobj; },
+            validate : [],
             validate_doc : function(jsonobj) {
-                var jsonobj = this.validate(jsonobj);
+                for(var i in this.validate){this.validate[i](jsonobj);}
                 for(var i in jsonobj){
                     this.fieldset.validate_doc(jsonobj[i]);
                 }
