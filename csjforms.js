@@ -26,7 +26,7 @@ csjforms = {
         text: function(options) {
             return extend({
                 template : '<label><%= label %></label><input type="text" name="<%= name %>">',
-                create : function(parentdef,jqs) {
+                create : function(jqs,parentdef) {
                     jqs.append(template(this.template,{name:parentdef.name,label:to_verbose(parentdef)}));
                     return jqs.children('[name='+parentdef.name+']');
                 },
@@ -50,8 +50,8 @@ csjforms = {
             return extend(extend(csjforms.widgets.text(),{
                 template : '<input type="hidden" name="<%= name %>">',
                 supercreate : csjforms.widgets.text().create,
-                create : function(parentdef,jqs){
-                    var r = this.supercreate(parentdef,jqs);
+                create : function(jqs,parentdef){
+                    var r = this.supercreate(jqs,parentdef);
                     r.parent().hide();
                     return r;
                 },
@@ -77,10 +77,10 @@ csjforms = {
                     for(var i in this.validate){this.validate[i](jsonobj);}
                     this.widget.fromjson(jqs.children('[name='+this.name+']'),jsonobj);
                 },
-                create : function(parentdef,jqs) {
+                create : function(jqs,parentdef) {
                     jqs.append('<div class="csjformfield" title="'+this.name+'"></div>');
                     var jqs = jqs.children('.csjformfield:last');
-                    this.widget.create(this,jqs);
+                    this.widget.create(jqs,this);
                     return jqs;
                 },
                 validate : [csjforms.validators.notblank(),],
@@ -135,7 +135,7 @@ csjforms = {
             template:'<fieldset class="<%= name %>"><legend><%= label %></legend></fieldset>',
             delbutton:'<input type="submit" name="del_<%= name %>" value="-" class="delbutton">',
             fields : [],
-            create : function(parentdef,jqs) {
+            create : function(jqs,parentdef) {
                 jqs.append(template(this.template,{name:this.name,label:to_verbose(this)}));
                 var jqs = jqs.children('fieldset:last');
                 if(parentdef) {
@@ -143,7 +143,7 @@ csjforms = {
                     jqs.children('input.delbutton').click(function(){$(this).parent().remove();return false;});
                 }
                 for(var i in this.fields) {
-                    this.fields[i].create(this,jqs);
+                    this.fields[i].create(jqs,this);
                 }
                 return jqs;
             },
@@ -157,6 +157,8 @@ csjforms = {
                     catch(e) {errors.push(e);}
                 }
                 if(errors.length) throw {name:'ValidationError',errors:errors};
+                jsonobj._id = jsonobj._id || undefined;
+                jsonobj._rev = jsonobj._rev || undefined;
                 for(var i in this.validate){this.validate[i](jsonobj);}
                 return jsonobj;
             },
@@ -185,7 +187,7 @@ csjforms = {
                      +'    <h1><%= label %></h1><div class="container"></div>'
                      +'    <input type="submit" name="add_<%= name %>" value="+" class="addbutton">'
                      +'</div>',
-            create : function(parentdef,jqs) {
+            create : function(jqs,parentdef) {
                 jqs.append(template(this.template,{name:this.name,label:to_plural(this)}));
                 var jqs = jqs.children('.csjformset[title='+this.name+']');
                 var that = this;
@@ -196,7 +198,7 @@ csjforms = {
                 return jqs;
             },
             append_fieldset : function(jqs) {
-                return this.fieldset.create(this,jqs.children('.container'));
+                return this.fieldset.create(jqs.children('.container'),this);
             },
             tojson : function(jqs) {
                 var jsonobj = [];

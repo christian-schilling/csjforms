@@ -44,7 +44,7 @@ var eventgroup = fieldset({name:"eventgroup", verbose:'Event group',fields:[
 
 var testdata = {active:true,name:1, description:"2", event_set:[{name:"3", jear:"4", event_date_set:[{date:"5"}, {date:"6"}]}, {name:"7", jear:"8", event_date_set:[]}], blub_set:[{foo:"9"}, {foo:"10"}]};
 
-var fieldset = eventgroup.create(null,$('#eventgroup > .container'));
+var fieldset = eventgroup.create($('#eventgroup > .container'));
 test('fromjson -> tojson',function(){
     eventgroup.fromjson(fieldset,testdata);
     equals(testdata.toSource(),eventgroup.tojson(fieldset).toSource());

@@ -41,7 +41,7 @@ var eventgroup = fieldset({name:"eventgroup", verbose:'Event group',fields:[
     }),
 ]});
 
-var fieldset = eventgroup.create(null,$('#eventgroup > .container'));
+var fieldset = eventgroup.create($('#eventgroup > .container'));
 $('#eventgroup').find('input#save').click(function(){
     try{
         alert(eventgroup.tojson(fieldset).toSource());
