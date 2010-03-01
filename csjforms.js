@@ -39,6 +39,18 @@ csjforms = {
                 template : '<label><%= label %></label><textarea rows=20 cols=80 name="<%= name %>"></textarea>',
             }),options);
         },
+        select: function(options) {
+            return extend(extend(csjforms.widgets.text(),{
+                template : '<label><%= label %></label><select name="<%= name %>"><%= options %></select>',
+                options: '',
+                create : function(jqs,parentdef) {
+                    jqs.append(template(this.template,{name:parentdef.name,label:to_verbose(parentdef),
+                        options:this.options
+                    }));
+                    return jqs.children('[name='+parentdef.name+']');
+                },
+            }),options);
+        },
         bool: function(options) {
             return extend(extend(csjforms.widgets.text(),{
                 template : '<label><%= label %></label><input type="checkbox" name="<%= name %>" value="<%= name %>">',
@@ -108,15 +120,20 @@ csjforms = {
         },
     },
     validators: {
+        messages : {
+            notempty: 'must not be empty',
+            invalidvalue: 'invalid value',
+            noint: 'not an integer',
+        },
         notblank: function() {
             return function(jsonobj){
-                if(!jsonobj) throw {name:'ValidationError',message:'must not be emtpy'};
+                if(!jsonobj) throw {name:'ValidationError',message:csjforms.validators.messages.notempty};
             };
         },
         regex: function(re) {
             return function(jsonobj) {
                 if(!jsonobj) {return;}
-                if(!re.test(jsonobj)) throw { name:'ValidationError', message:'invalid value', };
+                if(!re.test(jsonobj)) throw { name:'ValidationError', message:csjforms.validators.messages.invalidvalue, };
             };
         },
         integer: function() {
@@ -125,7 +142,7 @@ csjforms = {
                 try{
                     csjforms.validators.regex(/^\d+$/)(jsonobj);
                 }catch(e){
-                    throw extend(e,{message:'not an integer'});
+                    throw extend(e,{message:csjforms.validators.messages.noint});
                 }
             };
         },
@@ -184,7 +201,7 @@ csjforms = {
     inline: function(options) {
         return extend({
             template :'<div class="csjformset" title="<%= name %>">'
-                     +'    <h1><%= label %></h1><div class="container"></div>'
+                     +'    <h1><%= label %></h1><div class="csjfcontainer"></div>'
                      +'    <input type="submit" name="add_<%= name %>" value="+" class="addbutton">'
                      +'</div>',
             create : function(jqs,parentdef) {
@@ -198,13 +215,13 @@ csjforms = {
                 return jqs;
             },
             append_fieldset : function(jqs) {
-                return this.fieldset.create(jqs.children('.container'),this);
+                return this.fieldset.create(jqs.children('.csjfcontainer'),this);
             },
             tojson : function(jqs) {
                 var jsonobj = [];
                 var errors = [];
                 var that = this;
-                jqs.children('.container').children('fieldset').each(function(){
+                jqs.children('.csjfcontainer').children('fieldset').each(function(){
                     try{jsonobj.push(that.fieldset.tojson($(this)));}
                     catch(e){errors.push(e);}
                 });
